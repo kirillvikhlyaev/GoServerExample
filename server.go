@@ -13,10 +13,11 @@ const port = ":8080" // Указываем порт, общепринятый д
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/", rootPage)                              // Определяем ссылку и фукнцию на главную страницу
-	router.HandleFunc("/houses", getHouses).Methods("GET")        // Ссылка для получения всех факультетов
-	router.HandleFunc("/houses/{id}", getHouse).Methods("GET")    // Ссылка для получения факультета по ID
-	router.HandleFunc("/houses/{id}", updateHouse).Methods("PUT") // Обновляем очки факултета по ID
+	router.HandleFunc("/", rootPage)                                 // Определяем ссылку и фукнцию на главную страницу
+	router.HandleFunc("/X-Dumbledore-Mode", getStats).Methods("GET") // Получение статистики для Дамблдора
+	router.HandleFunc("/houses", getHouses).Methods("GET")           // Ссылка для получения всех факультетов
+	router.HandleFunc("/houses/{id}", getHouse).Methods("GET")       // Ссылка для получения факультета по ID
+	router.HandleFunc("/houses/{id}", updateHouse).Methods("PUT")    // Обновляем очки факултета по ID
 
 	fmt.Println("Serving @ http://127.0.0.1" + port) // Для проверки запустился ли наш друг
 
@@ -72,11 +73,31 @@ func getHouse(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&House{})
 }
 
+// Получение статистики для Дамблдора
+func getStats(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	jsonBody, err := json.Marshal(info1)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.Write(jsonBody)
+	}
+}
+
 type House struct { // Класс House - факультеты Хогвартса
 	Id    string `json: "id"`
 	Name  string `json: "name"`
 	Score string `json: "score"`
 }
+
+type Info struct { // Информация для Дамблдора
+	Id         string `json: "id"`
+	DeviceInfo string `json: "deviceInfo"`
+}
+
+var info1 = Info{"131341", "Android 12, SF-313"}
 
 var houseList = []House{ // Список факультетов Хогвартса
 	House{"0", "Slytherin", "15"},
@@ -84,3 +105,6 @@ var houseList = []House{ // Список факультетов Хогвартс
 	House{"3", "Hufflepuff", "32"},
 	House{"1", "Ravenclaw", "5"},
 }
+
+//..>cd GoServer/
+//../GoServer>go run server.go

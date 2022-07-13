@@ -42,6 +42,7 @@ func getHouses(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Обновление данных факультета по ID
 func updateHouse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/jsoon")
 	params := mux.Vars(r) // параметры - это тело запроса
@@ -60,6 +61,7 @@ func updateHouse(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(houseList)
 }
 
+// Получение факультета по ID
 func getHouse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)

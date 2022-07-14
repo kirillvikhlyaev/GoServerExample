@@ -13,11 +13,13 @@ const port = ":8080" // Указываем порт, общепринятый д
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/", rootPage)                                 // Определяем ссылку и фукнцию на главную страницу
-	router.HandleFunc("/X-Dumbledore-Mode", getStats).Methods("GET") // Получение статистики для Дамблдора
-	router.HandleFunc("/houses", getHouses).Methods("GET")           // Ссылка для получения всех факультетов
-	router.HandleFunc("/houses/{id}", getHouse).Methods("GET")       // Ссылка для получения факультета по ID
-	router.HandleFunc("/houses/{id}", updateHouse).Methods("PUT")    // Обновляем очки факултета по ID
+	router.HandleFunc("/", rootPage)                                         // Определяем ссылку и фукнцию на главную страницу
+	router.HandleFunc("/X-Dumbledore-Mode", getStats).Methods("GET")         // Получение статистики для Дамблдора
+	router.HandleFunc("/X-Dumbledore-Mode/{id}", getStatById).Methods("GET") // Получение статистики по ID
+	router.HandleFunc("/X-Dumbledore-Mode", addStats).Methods("POST")        //Добавление статистики на сервер
+	router.HandleFunc("/houses", getHouses).Methods("GET")                   // Ссылка для получения всех факультетов
+	router.HandleFunc("/houses/{id}", getHouseById).Methods("GET")           // Ссылка для получения факультета по ID
+	router.HandleFunc("/houses/{id}", updateHouse).Methods("PUT")            // Обновляем очки факултета по ID
 
 	fmt.Println("Serving @ http://127.0.0.1" + port) // Для проверки запустился ли наш друг
 
@@ -29,6 +31,7 @@ func rootPage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("This is root page")) // Выводим на главной странице текст
 }
 
+// # GET #
 // Получение всех факультетов
 func getHouses(w http.ResponseWriter, r *http.Request) {
 	fetchCount := len(houseList) // Количество факультетов
@@ -43,6 +46,7 @@ func getHouses(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// # PUT #
 // Обновление данных факультета по ID
 func updateHouse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/jsoon")
@@ -60,9 +64,12 @@ func updateHouse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	json.NewEncoder(w).Encode(houseList)
+
 }
 
-func getHouse(w http.ResponseWriter, r *http.Request) {
+// # GET #
+// Получение факультета по ID
+func getHouseById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	for _, item := range houseList {
@@ -74,17 +81,42 @@ func getHouse(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&House{})
 }
 
+// # GET #
 // Получение статистики для Дамблдора
 func getStats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	jsonBody, err := json.Marshal(info1)
+	fetchCount := len(infoList)
+	jsonBody, err := json.Marshal(infoList[0:fetchCount])
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		w.Write(jsonBody)
 	}
+}
+
+// # GET #
+// Получение статистики по ID
+func getStatById(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	for _, item := range infoList {
+		if item.Id == params["id"] {
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Info{})
+}
+
+// # POST #
+// Добавление статисики для Дамблдора на сервер
+func addStats(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var info Info
+	_ = json.NewDecoder(r.Body).Decode(&info)
+	infoList = append(infoList, info)
+	json.NewEncoder(w).Encode(info)
 }
 
 type House struct { // Класс House - факультеты Хогвартса
@@ -96,15 +128,16 @@ type House struct { // Класс House - факультеты Хогвартс�
 type Info struct { // Информация для Дамблдора
 	Id         string `json: "id"`
 	DeviceInfo string `json: "deviceInfo"`
+	DateTime   string `json: "dateTime"`
 }
 
-var info1 = Info{"131341", "Android 12, SF-313"}
+var infoList = []Info{}
 
 var houseList = []House{ // Список факультетов Хогвартса
-	House{"0", "Slytherin", "15"},
-	House{"2", "Gryffindor", "42"},
-	House{"3", "Hufflepuff", "32"},
-	House{"1", "Ravenclaw", "5"},
+	House{"0", "Slytherin", "0"},
+	House{"2", "Gryffindor", "0"},
+	House{"3", "Hufflepuff", "0"},
+	House{"1", "Ravenclaw", "0"},
 }
 
 //..>cd GoServer/
